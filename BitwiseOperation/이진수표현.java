@@ -11,8 +11,7 @@ public class 이진수표현 {
         for(int testCase = 1; testCase <= T; testCase++) {
             int n = sc.nextInt();
             int m = sc.nextInt();
-
- 			bitMasking(n, m, testCase);
+            bitMasking(n, m, testCase);
         }
     }
 
