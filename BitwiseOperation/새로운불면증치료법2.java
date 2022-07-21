@@ -1,10 +1,10 @@
 package SamsungAlgorithm22.BitwiseOperation;
 
-import java.io.IOException;
-import java.util.Scanner;
+import java.util.*;
 
 public class 새로운불면증치료법2 {
-    public static void main(String[] args) throws IOException {
+
+    public static void main(String[] args) {
 
         Scanner sc = new Scanner(System.in);
         int T = sc.nextInt();
@@ -36,6 +36,7 @@ public class 새로운불면증치료법2 {
 
         return  cnt * intN;
     }
+    
 }
 
 /*
