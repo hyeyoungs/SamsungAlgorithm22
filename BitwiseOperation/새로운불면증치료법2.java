@@ -1,4 +1,4 @@
-package BitwiseOperation;
+package SamsungAlgorithm22.BitwiseOperation;
 
 import java.io.IOException;
 import java.util.Scanner;
