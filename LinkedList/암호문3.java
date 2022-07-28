@@ -107,8 +107,7 @@ public class 암호문3 {
         if (temp == null || temp.next == null)
             return;
 
-        Node next = temp.next.next;
-        temp.next = next;
+        temp.next = temp.next.next;
     }
 
     static void init() {
