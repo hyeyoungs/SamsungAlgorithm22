@@ -1,18 +1,18 @@
 package SamsungAlgorithm22.LinkedList;
 
-class Node {
-    public int data;
-    public Node prev;
-    public Node next;
-
-    public Node(int data) {
-        this.data = data;
-        this.prev = null;
-        this.next = null;
-    }
-}
-
 public class DoubleLinkedList {
+
+    private class Node {
+        private int data;
+        private Node prev;
+        private Node next;
+
+        private Node(int data) {
+            this.data = data;
+            this.prev = null;
+            this.next = null;
+        }
+    }
 
     private final static int MAX_NODE = 10000;
 
@@ -20,13 +20,13 @@ public class DoubleLinkedList {
     private int nodeCnt = 0;
     private Node head;
 
+    public void init() {
+        head = null;
+    }
+
     public Node getNode(int data) {
         node[nodeCnt] = new Node(data);
         return node[nodeCnt++];
-    }
-
-    public void init() {
-        head = null;
     }
 
     public void addNode2Head(int data) {
@@ -164,4 +164,5 @@ public class DoubleLinkedList {
         }
         return idx;
     }
+
 }
