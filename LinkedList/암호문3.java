@@ -2,23 +2,24 @@ package SamsungAlgorithm22.LinkedList;
 
 import java.util.*;
 
-class Node {
-    public int data;
-    public Node next;
-
-    public Node(int data) {
-        this.data = data;
-        this.next = null;
-    }
-}
-
 public class 암호문3 {
 
-    private final static Scanner sc = new Scanner(System.in);
-    private final static int MAX_NODE = 10000;
-    private static Node[] passwords;
-    private static int nodeCnt;
-    private static Node head;
+    static class Node {
+        public int data;
+        public Node next;
+
+        public Node(int data) {
+            this.data = data;
+            this.next = null;
+        }
+    }
+
+
+    final static Scanner sc = new Scanner(System.in);
+    final static int MAX_NODE = 10000;
+    static Node[] passwords;
+    static int nodeCnt;
+    static Node head;
 
 
     static Node getNode(int data) {
