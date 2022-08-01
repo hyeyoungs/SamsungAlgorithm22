@@ -3,7 +3,7 @@ package SamsungAlgorithm22.DataStructure;
 import java.util.*;
 
 class Tree {
-
+    /*** 기본 ***/
     static final int MAX_CHILD_NUM = 2;
 
     //TreeNode
@@ -33,6 +33,7 @@ class Tree {
         }
     }
 
+    /*** 삽입 ***/
     //자식노드 추가로 트리 구성
     public void addChild(int parent, int child) {
         int found = -1;
@@ -49,6 +50,7 @@ class Tree {
         treenode[child].parent = parent;
     }
 
+    /*** 탐색 ***/
     //루트노드 리턴
     public int getRoot() {
         for (int i = 1; i < nodeNum; i++) {
@@ -59,6 +61,7 @@ class Tree {
         return -1;
     }
 
+    /*** 순회 ***/
     //순회
     public void preOrder(int root) {
         System.out.printf("%d ", root);
@@ -81,6 +84,7 @@ class Solution {
         int T = sc.nextInt();
 
         for (int test_case = 1; test_case <= T; ++test_case) {
+            /*** 초기화 ***/
             int node = sc.nextInt();
             int edge = sc.nextInt();
 
