@@ -40,14 +40,11 @@ public class 염라대왕의이름정렬 {
         String temp = null;
         for (int i = 0; i < name.length; i++) {
             if(!name[i].equals(temp)) {
-                System.out.println(name[i]);
+                sb.append(name[i] + "\n");
             }
             temp = name[i];
         }
 
-        for (int i = 0; i < N; i++) {
-            sb.append(name[i] + "\n");
-        }
     }
 
 }
