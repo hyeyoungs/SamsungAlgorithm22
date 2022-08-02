@@ -17,7 +17,7 @@ public class MergeSort {
     }
 
     static void mergeSort(int[] arr, int[] temp, int start, int end) {
-        //시작 인덱스가 끝 인덱스 보다 작은 경우에만 호
+        //시작 인덱스가 끝 인덱스 보다 작은 경우에만 호출
         if (start < end) {
             //가운데 index
             int mid = (start + end) / 2;
