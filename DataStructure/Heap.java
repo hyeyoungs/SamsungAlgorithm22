@@ -51,10 +51,10 @@ public class Heap {
 
         //힙 구조를 계속 유지하도록 자식과 값을 바꾸면서 내려간다.
         int current = 0;
-        while (current * 2 + 1 < heapSize && current * 2 + 1 < heapSize) {
+        while (current < heapSize && current * 2 + 1 < heapSize) {
             //자식과 값을 비교할 때는 둘 중 더 큰 값(최소 힙일 경우 작은 값)과 비교한다.
             int child;
-            if (current * 2 + 2 == heapSize)    child = current * 2 + 1;
+            if (current * 2 + 2 >= heapSize)    child = current * 2 + 1;
             else    child = heap[current * 2 + 1] < heap[current * 2 + 2] ? current * 2 + 1 : current * 2 + 2;
 
             if (heap[current] < heap[child])    break;
