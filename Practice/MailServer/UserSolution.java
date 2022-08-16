@@ -4,97 +4,225 @@ import java.util.*;
 
 public class UserSolution {
 
-    class Mail {
-        int uId;
-        char[] subject;
+    static class Trie {
+        static int nodeNum = 0;
+        static int ALPHABET_LEN = 26;
+        Node root;
+
+        public Trie() {
+            root = new Node();
+            root.c = ' ';
+        }
+
+        static class Node {
+            int num;
+            char c;
+            boolean isTerminal;
+            Node[] child = new Node[ALPHABET_LEN];
+
+            public Node() {
+                this.num = nodeNum++;
+            }
+        }
+
+        void clear() {
+            for (int i = 0; i < ALPHABET_LEN; i++) {
+                root.child[i] = null;
+            }
+        }
+
+        int insert(String str) {
+            int len = str.length();
+            Node cur = root;
+
+            for (int i = 0; i < len; i++) {
+                int key = str.charAt(i) - 'a';
+
+                if(cur.child[key] == null) {
+                    cur.child[key] = new Node();
+                    cur.child[key].c = str.charAt(i);
+                }
+
+                cur = cur.child[key];
+            }
+            cur.isTerminal = true;
+            return cur.num;
+        }
+
+        int find(String str) {
+            int len = str.length();
+            Node cur = root;
+
+            for (int i = 0; i < len; i++) {
+                int key = str.charAt(i) - 'a';
+                if (cur.child[key] == null) {
+                    return -1;
+                }
+                cur = cur.child[key];
+            }
+
+            if (cur != null && cur.isTerminal)  return cur.num;
+            else    return -1;
+        }
     }
 
-    static Mail[] mailPool;
-    static int nextMail;
-    static HashMap<Integer, ArrayDeque<Mail>> user2MailBox;
-    static HashMap<Mail, String[]> mail2Words;
-    static int MAX_MAIL_SIZE;
+    static class Node {
+        int mailNum;
+        Node next;
+        Node prev;
+
+        public Node(int mailNum) {
+            this.mailNum = mailNum;
+        }
+    }
+
+    static int MAX_USER = 1000;
+    static int MAX_MAIL = 10000;
+
+    int[][] mails = new int[MAX_MAIL][10];
+    int[] mailWordCount = new int[MAX_MAIL];
+    Node[] userMailBox = new Node[MAX_USER];
+    Node[] tails = new Node[MAX_USER];
+    int[] userMailCount = new int[MAX_USER];
+
+    Trie trie;
+    int k, mailNum;
+
+    public UserSolution() {
+        trie = new Trie();
+
+        for (int i = 0; i < MAX_USER; i++) {
+            userMailBox[i] = new Node(-1);
+            tails[i] = new Node(-1);
+        }
+    }
+
 
     public void init(int N, int K) {
-        // N 명의 유저가 메일서버를 이용한다.
-        // 유저 한 명당 받은 메일함에 저장할 수 있는 메일의 개수는 K 개이다.
-        mailPool = new Mail[N * K];
-        nextMail = 0;
-        MAX_MAIL_SIZE = K;
-        // uId -> Mail List
-        user2MailBox = new HashMap<>();
-        // Mail -> Mail subject's words
-        mail2Words = new HashMap<>();
+        k = K;
+        mailNum = 0;
 
-        for (int i = 0; i < N; i ++) {
-            user2MailBox.put(i, new ArrayDeque<>());
+        Arrays.fill(mailWordCount, 0);
+        Arrays.fill(userMailCount, 0);
+
+        for (int i = 0; i < MAX_USER; i++) {
+            userMailBox[i].next = tails[i];
+            tails[i].prev = userMailBox[i];
         }
+        trie.clear();
     }
 
-    Mail createMail(int uId, char[] subject) {
-        Mail mail = mailPool[nextMail++];
-        mail.uId = uId;
-        mail.subject = subject;
-        return mail;
+    String arrToString(char[] arr) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; arr[i] != '\0'; i++) {
+            sb.append(arr[i]);
+        }
+        return sb.toString();
     }
 
-    public void sendMail(char[] subject, int uId, int cnt, int[] rIds) {
+
+    void addNode(Node head, int mailNum) {
+        Node newNode = new Node(mailNum);
+        newNode.next = head.next;
+        newNode.next.prev = newNode;
+        head.next = newNode;
+        newNode.prev = head;
+    }
+
+    void removeTail(int uID) {
+        Node tail = tails[uID];
+        Node remove = tail.prev;
+        remove.prev.next = tail;
+        tail.prev = remove.prev;
+    }
+
+    void removeNode(Node remove) {
+        remove.prev.next = remove.next;
+        remove.next.prev = remove.prev;
+    }
+
+    void sendMail(char subject[], int uID, int cnt, int rIDs[]) {
+        String[] words = arrToString(subject).split(" ");
+        for (int i = 0; i < words.length; i++) {
+            mails[mailNum][i] = trie.insert(words[i]);
+        }
+        mailWordCount[mailNum] = words.length;
+
         for (int i = 0; i < cnt; i++) {
-            //메일 서버는 subject[] 제목의 메일을 rIDs[] 수신인들의 받은 메일함에 저장한다.
-            //수신인들의 받은 메일함에 있는 메일의 개수가 K 개일 경우, 가장 오래된 메일이 삭제되고 subject[] 제목의 메일이 저장된다.
-            if (user2MailBox.get(rIds[i]).size() == MAX_MAIL_SIZE) {
-                Mail mail = user2MailBox.get(uId).pollLast();
-                mail2Words.remove(mail);
-            }
+            int userId = rIDs[i];
+            addNode(userMailBox[userId], mailNum);
+            userMailCount[userId]++;
 
-            Mail mail = createMail(rIds[i], subject);
-            user2MailBox.get(uId).addFirst(mail);
-            String[] words = String.valueOf(mail.subject).split(" ");
-            mail2Words.put(mail, words);
-        }
-
-    }
-
-    public int getCount(int uId) {
-        return user2MailBox.get(uId).size();
-    }
-
-    public int deleteMail(int uId, char[] subject) {
-        //uID 유저의 받은 메일함에서 subject[] 와 일치하는 제목을 가진 메일을 삭제하고, 삭제한 메일의 개수를 리턴한다.
-        //subject[] 는 영어 소문자와 빈칸으로 구성되며, ‘\0’ 으로 끝나고 ‘\0’ 을 포함한 전체 길이는 200 이하이다.
-        int count = 0;
-        ArrayDeque<Mail> mailDeque = user2MailBox.get(uId);
-        Iterator<Mail> it = mailDeque.iterator();
-
-        while (it.hasNext()) {
-            char[] currentSubject = it.next().subject;
-            if(currentSubject.equals(subject)) {
-                user2MailBox.get(uId).remove(it.next());
-                mail2Words.remove(it.next());
-                count += 1;
+            if (userMailCount[userId] > k) {
+                removeTail(userId);
+                userMailCount[userId]--;
             }
         }
 
-        return count;
+        mailNum++;
     }
 
-    public int searchMail(int uId, char[] text) {
-        //uID 유저의 받은 메일함에서 메일 제목에 text[] 단어가 포함되어 있는 메일을 찾고, 찾은 메일의 개수를 리턴한다.
-        //메일 제목에 포함되어 있는 단어 중 하나와 text[] 단어가 일치해야만 검색이 되며, 일부분만 같을 경우 검색이 되지 않아 찾은 메일 개수에 포함되지 않는다.
-        int count = 0;
-        ArrayDeque<Mail> mailDeque = user2MailBox.get(uId);
-        Iterator<Mail> it = mailDeque.iterator();
+    int deleteMail(int uID, char subject[]) {
+        int answer = 0;
+        String[] subjects = arrToString(subject).split(" ");
+        Node cur = this.userMailBox[uID];
 
-        while (it.hasNext()) {
-            String[] words = mail2Words.get(it.next());
-            for (String word : words) {
-                if(word.equals(text)) {
-                    count += 1;
+        while (cur.next != tails[uID]) {
+            cur = cur.next;
+
+            int len = mailWordCount[cur.mailNum];
+
+            if (len != subjects.length) {
+                continue;
+            }
+
+            boolean flag = true;
+            int[] mail = mails[cur.mailNum];
+
+            for (int i = 0; i < len; i++) {
+                if (mail[i] != trie.find(subjects[i])) {
+                    flag = false;
+                    break;
+                }
+            }
+
+            if (flag) {
+                removeNode(cur);
+                answer++;
+            }
+        }
+
+        userMailCount[uID] -= answer;
+
+        return answer;
+    }
+
+    int searchMail(int uID, char text[]) {
+        int answer = 0;
+        Node cur = userMailBox[uID];
+        Node tail = tails[uID];
+
+        String target = arrToString(text);
+        int num = trie.find(target);
+
+        while (cur.next != tail) {
+            cur = cur.next;
+
+            int len = mailWordCount[cur.mailNum];
+
+            for (int i = 0; i < len; i++) {
+                if (mails[cur.mailNum][i] == num) {
+                    answer++;
                     break;
                 }
             }
         }
-        return count;
+
+        return answer;
+    }
+
+    int getCount(int uID) {
+        return userMailCount[uID];
     }
 
 }
