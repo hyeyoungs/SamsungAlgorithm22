@@ -4,73 +4,106 @@ import java.util.*;
 
 public class UserSolution {
 
+    /** Trie 자료구조 ***/
     static class Trie {
+        //노드 개수
         static int nodeNum = 0;
+        //알파벳 길이
         static int ALPHABET_LEN = 26;
+        //루트 노드 표시
         Node root;
 
+        //트라이 만들 때, 루트 노드 생성
         public Trie() {
             root = new Node();
             root.c = ' ';
         }
 
+        //노드 자료구조
         static class Node {
+            //숫자 (노드에 대한 숫자)
             int num;
+            //문자
             char c;
+            //종료 여부
             boolean isTerminal;
+            //자식 노드
             Node[] child = new Node[ALPHABET_LEN];
 
+            //노드 만들 때, 노드 개수 증가
             public Node() {
                 this.num = nodeNum++;
             }
         }
 
+        //트라이 초기화
         void clear() {
             for (int i = 0; i < ALPHABET_LEN; i++) {
                 root.child[i] = null;
             }
         }
 
+        //문자열 삽입
         int insert(String str) {
+            //문자열 길이
             int len = str.length();
+            //루트 노드 가져오기
             Node cur = root;
 
+            //문자열의 각 문자마다
             for (int i = 0; i < len; i++) {
+                //문자를 숫자로
                 int key = str.charAt(i) - 'a';
-
+                //cur 노드의 자식노드 중 해당 문자가 없다면,
                 if(cur.child[key] == null) {
+                    //cur 노드의 자식노드에 해당 문자에 관한 노드 생성
                     cur.child[key] = new Node();
                     cur.child[key].c = str.charAt(i);
                 }
-
+                //cur 노드는 새로 추가된 노드로 설정
                 cur = cur.child[key];
             }
+
+            //cur 노드 종료여부 표시
             cur.isTerminal = true;
+            //cur 노드에 대한 숫자 리턴
             return cur.num;
         }
 
+        //문자열 검색
         int find(String str) {
+            //문자열 길이
             int len = str.length();
+            //루트 노드 가져오기
             Node cur = root;
 
+            //문자열의 각 문자마다
             for (int i = 0; i < len; i++) {
+                //문자를 숫자로
                 int key = str.charAt(i) - 'a';
+                //cur 노드의 자식 노드 중 해당 문자가 없다면,
                 if (cur.child[key] == null) {
+                    //-1 리턴
                     return -1;
                 }
+                //cur 노드는 찾은 문자 노드로 설정
                 cur = cur.child[key];
             }
 
+            //cur 노드(찾은 마지막 문자 노드가)가 null이 아니면서 cur 노드가 Terminal 표시 되어 있다면, cur 노드에 대한 숫자 리턴
             if (cur != null && cur.isTerminal)  return cur.num;
+            //아니면, -1 리턴
             else    return -1;
         }
     }
 
+    /*** mail Node 자료구조 ***/
     static class Node {
         int mailNum;
         Node next;
         Node prev;
 
+        //메일 노드 만들 때, 메일 Id 받아서 생성
         public Node(int mailNum) {
             this.mailNum = mailNum;
         }
@@ -79,18 +112,25 @@ public class UserSolution {
     static int MAX_USER = 1000;
     static int MAX_MAIL = 10000;
 
+    //mId2wId
     int[][] mails = new int[MAX_MAIL][10];
+    //mId2wordCnt
     int[] mailWordCount = new int[MAX_MAIL];
+    //uId2MailBox
     Node[] userMailBox = new Node[MAX_USER];
+    //맨 마지막을 가리키는 노드
     Node[] tails = new Node[MAX_USER];
+    //uId2mailCnt
     int[] userMailCount = new int[MAX_USER];
 
+    //트라이
     Trie trie;
     int k, mailNum;
 
     public UserSolution() {
+        // 테스트 케이스 마다 trie 생성
         trie = new Trie();
-
+        // userMailBox, tails 초기화
         for (int i = 0; i < MAX_USER; i++) {
             userMailBox[i] = new Node(-1);
             tails[i] = new Node(-1);
