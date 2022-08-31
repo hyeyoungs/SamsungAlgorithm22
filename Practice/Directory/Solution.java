@@ -89,7 +89,7 @@ class Solution {
         int test, T;
         int n, m;
 
-        // System.setIn(new java.io.FileInputStream("sample_input.txt"));
+        System.setIn(new java.io.FileInputStream("src/SamsungAlgorithm22/Practice/Directory/sample_input.txt"));
 
         Scanner sc = new Scanner(System.in);
 
