@@ -78,7 +78,7 @@ class Solution {
     public static void main(String[] args) throws Exception {
         int TC, MARK;
 
-        //System.setIn(new java.io.FileInputStream("src/SamsungAlgorithm22/Practice/SoldierManagement/sample_input.txt"));
+        System.setIn(new java.io.FileInputStream("src/SamsungAlgorithm22/Practice/SoldierManagement/sample_25_input.txt"));
 
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         StringTokenizer st = new StringTokenizer(br.readLine(), " ");
