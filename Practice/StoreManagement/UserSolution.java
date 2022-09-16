@@ -4,221 +4,143 @@ import java.util.*;
 
 class UserSolution {
 
-    static class Product {
+    class Product implements Comparable<Product> {
+        int bId;
+        int pId;
+        int price;
+        int quantity;
 
-        static class Purchase implements Comparable<Purchase> {
-            int bId, price, initialQuantity, quantity;
-
-            public Purchase(int bId, int price, int quantity) {
-                this.bId = bId;
-                this.price = price;
-                this.initialQuantity = quantity;
-                this.quantity = quantity;
-            }
-
-            @Override
-            public int compareTo(Purchase purchase) {
-                if (price != purchase.price) {
-                    return price - purchase.price;
-                } else {
-                    return bId - purchase.bId;
-                }
-            }
+        public Product(int bId, int pId, int price, int quantity) {
+            this.bId = bId;
+            this.pId = pId;
+            this.price = price;
+            this.quantity = quantity;
         }
 
-        int number, totalQuantity;
-
-        TreeSet<Purchase> purchases = new TreeSet<>();
-
-        public Product(int number) {
-            this.number = number;
+        @Override
+        public int compareTo(Product product) {
+            //가격, bId, quantity 작은 순으로 (뒤로)
+            if (price == product.price && bId == product.bId)   return quantity - product.quantity;
+            if (price == product.price) return bId - product.bId;
+            return price - product.price;
         }
-
-        public int buy(int bId, int mPrice, int mQuantity) {
-            purchases.add(new Purchase(bId, mPrice, mQuantity));
-            return totalQuantity += mQuantity;
-        }
-
-        public int cancel(int bId) {
-            Iterator<Purchase> it = purchases.iterator();
-
-            while(it.hasNext()) {
-                Purchase purchase = it.next();
-                if (purchase.bId != bId || purchase.initialQuantity != purchase.quantity)
-                    continue;
-
-                totalQuantity -= purchase.quantity;
-                it.remove();
-                return totalQuantity;
-            }
-
-            return -1;
-        }
-
     }
 
-    static class SaleHistory {
+    class Sell {
+        int sId;
+        int pId;
+        int price;
+        int quantity;
+        ArrayList<Product> productList;
 
-        static class Sale {
-            int bId, price, initialQuantity, quantity;
-
-            public Sale(int bId, int price, int initialQuantity, int quantity) {
-                this.bId = bId;
-                this.price = price;
-                this.initialQuantity = initialQuantity;
-                this.quantity = quantity;
-            }
-        }
-
-        int sId, productNumber, totalQuantity;
-        ArrayList<Sale> sales = new ArrayList<>();
-
-        public SaleHistory(int sId, int productNumber) {
+        public Sell(int sId, int pId, int price, int quantity) {
             this.sId = sId;
-            this.productNumber = productNumber;
+            this.pId = pId;
+            this.price = price;
+            this.quantity = quantity;
+            productList = new ArrayList<>();
         }
-
-        public void add(int bId, int price, int initialQuantity, int quantity) {
-            sales.add(new Sale(bId, price, initialQuantity, quantity));
-            totalQuantity += quantity;
-        }
-
     }
 
-    static HashMap<Integer, Product> products;
-    static HashMap<Integer, Integer> buyInfos;
-    static HashMap<Integer, SaleHistory> saleInfos;
+    HashMap<Integer, TreeSet<Product>> pId2ProductList;
+    HashMap<Integer, Product> productReceipt;
+    HashMap<Integer, Sell> sellReceipt;
+    HashMap<Integer, Integer> pId2Stock;
 
     public void init() {
-        products = new HashMap<>();
-        buyInfos = new HashMap<>();
-        saleInfos = new HashMap<>();
+        pId2ProductList = new HashMap<>();
+        productReceipt = new HashMap<>();
+        sellReceipt = new HashMap<>();
+        pId2Stock = new HashMap<>();
     }
 
     public int buy(int bId, int mProduct, int mPrice, int mQuantity) {
-        Product product = products.get(mProduct);
+        pId2Stock.put(mProduct, pId2Stock.get(mProduct) == null ? mQuantity : pId2Stock.get(mProduct) + mQuantity);
+        productReceipt.put(bId, new Product(bId, mProduct, mPrice, mQuantity));
 
-        if (product == null) {
-            product = new Product(mProduct);
-            products.put(mProduct, product);
+        if(!pId2ProductList.containsKey(mProduct)) {
+            pId2ProductList.put(mProduct, new TreeSet<>());
         }
+        pId2ProductList.get(mProduct).add(new Product(bId, mProduct, mPrice, mQuantity));
 
-        buyInfos.put(bId, mProduct);
-        return product.buy(bId, mPrice, mQuantity);
+        return pId2Stock.get(mProduct);
     }
 
     public int cancel(int bId) {
-        Integer productNumber = buyInfos.get(bId);
-        if (productNumber == null) {
+        Product product = productReceipt.get(bId);
+        if (product == null || !pId2ProductList.get(product.pId).contains(product)) {
             return -1;
         }
 
-        Product product = products.get(productNumber);
-        if (product == null) {
-            return -1;
-        }
+        pId2Stock.put(product.pId, pId2Stock.get(product.pId) - product.quantity);
+        int stock = pId2Stock.get(product.pId);
 
-        int quantity = product.cancel(bId);
-        if (quantity != -1) {
-            buyInfos.remove(bId);
-        }
-        return quantity;
+        pId2ProductList.get(product.pId).remove(product);
+        productReceipt.remove(bId);
+
+        return stock;
     }
 
     public int sell(int sId, int mProduct, int mPrice, int mQuantity) {
-        Product product = products.get(mProduct);
-
-        if (product == null || product.totalQuantity < mQuantity)
+        if (pId2Stock.get(mProduct) == null || pId2Stock.get(mProduct) < mQuantity) {
             return -1;
-
-        int revenue = 0;
-
-        SaleHistory history = new SaleHistory(sId, mProduct);
-        saleInfos.put(sId, history);
-
-        Iterator<Product.Purchase> it = product.purchases.iterator();
-
-        while (it.hasNext()) {
-            Product.Purchase purchase = it.next();
-
-            if (purchase.quantity < mQuantity) {
-                revenue += (mPrice - purchase.price) * purchase.quantity;
-
-                product.totalQuantity -= purchase.quantity;
-
-                mQuantity -= purchase.quantity;
-
-                buyInfos.remove(purchase.bId);
-                history.add(purchase.bId, purchase.price, purchase.initialQuantity, purchase.quantity);
-                it.remove();
-
-            } else {
-                revenue += (mPrice - purchase.price) * mQuantity;
-
-                product.totalQuantity -= mQuantity;
-                purchase.quantity -= mQuantity;
-
-                history.add(purchase.bId, purchase.price, purchase.initialQuantity, mQuantity);
-
-                mQuantity = 0;
-
-                if (purchase.quantity == 0) {
-                    buyInfos.remove(purchase.bId);
-                    it.remove();
-                }
-            }
-
-            if (product.purchases.isEmpty())
-                products.remove(product.number);
-
-            if (mQuantity == 0)
-                break;
         }
 
-        return revenue;
+        pId2Stock.put(mProduct, pId2Stock.get(mProduct) - mQuantity);
+
+        int margin = 0;
+        ArrayList<Product> deletedProductList = new ArrayList<>();
+        Sell sell = new Sell(sId, mProduct, mPrice, mQuantity);
+
+        for (Product product : pId2ProductList.get(mProduct)) {
+            if (product.quantity <= mQuantity) {
+                deletedProductList.add(product);
+                sell.productList.add(product);
+                margin += (mPrice - product.price) * product.quantity;
+                mQuantity -= product.quantity;
+            } else {
+                sell.productList.add(new Product(product.bId, product.pId, product.price, mQuantity));
+                pId2ProductList.get(mProduct).remove(product);
+                pId2ProductList.get(mProduct).add(new Product(product.bId, product.pId, product.price, product.quantity - mQuantity));
+                margin += (mPrice - product.price) * mQuantity;
+                mQuantity -= mQuantity;
+            }
+
+            if (mQuantity <= 0) {
+                break;
+            }
+        }
+
+        sellReceipt.put(sId, sell);
+        for (Product product : deletedProductList) {
+            pId2ProductList.get(mProduct).remove(product);
+        }
+        return margin;
     }
 
     public int refund(int sId) {
-        SaleHistory saleHistory = saleInfos.get(sId);
-
-        if (saleHistory == null)
+        Sell sell = sellReceipt.get(sId);
+        if (sell == null) {
             return -1;
-
-        Product product = products.get(saleHistory.productNumber);
-
-        if (product == null) {
-            product = new Product(saleHistory.productNumber);
-            products.put(saleHistory.productNumber, product);
         }
 
-        for (SaleHistory.Sale sales : saleHistory.sales) {
-            if (!buyInfos.containsKey(sales.bId)) {
-                buyInfos.put(sales.bId, product.number);
+        pId2Stock.put(sell.pId, pId2Stock.get(sell.pId) + sell.quantity);
 
-                Product.Purchase purchase = new Product.Purchase(sales.bId, sales.price, sales.initialQuantity);
-                purchase.quantity = sales.quantity;
-
-                product.purchases.add(purchase);
-
-                product.totalQuantity += sales.quantity;
-            } else {
-                Iterator<Product.Purchase> it = product.purchases.iterator();
-
-                while (it.hasNext()) {
-                    Product.Purchase purchase = it.next();
-
-                    if (purchase.bId == sales.bId) {
-                        purchase.quantity += sales.quantity;
-                        break;
-                    }
+        for (int idx = 0; idx < sell.productList.size(); idx ++) {
+            if (idx == sell.productList.size() - 1) {
+                Product refundedProduct = sell.productList.get(idx);
+                Product higherOne = pId2ProductList.get(refundedProduct.pId).higher(new Product(refundedProduct.bId - 1, 0, refundedProduct.price, 0));
+                if (higherOne != null && refundedProduct.bId == higherOne.bId) {
+                    pId2ProductList.get(refundedProduct.pId).add(new Product(refundedProduct.bId, refundedProduct.pId, refundedProduct.price, higherOne.quantity + refundedProduct.quantity));
+                    pId2ProductList.get(refundedProduct.pId).remove(higherOne);
+                    break;
                 }
-
-                product.totalQuantity += sales.quantity;
             }
+            pId2ProductList.get(sell.pId).add(sell.productList.get(idx));
         }
 
-        saleInfos.remove(sId);
-
-        return saleHistory.totalQuantity;
+        sellReceipt.remove(sId);
+        return sell.quantity;
     }
+
 }
